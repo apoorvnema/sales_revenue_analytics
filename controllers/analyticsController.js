@@ -3,18 +3,20 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const redisClient = require('../services/redisClient');
 
-exports.getCustomerSpending = async (customerId) => {
+exports.getCustomerSpending = async ({customerId}) => {
   try {
-    const cacheKey = `customer-spending-${customerId?.customerId}`;
+    const cacheKey = `customer-spending-${customerId}`;
     const cachedData = await redisClient.get(cacheKey);
 
     if (cachedData) {
       return JSON.parse(cachedData);
     }
 
-    const customerUUID = new mongoose.Types.UUID(customerId?.customerId);
+    const customerUUID = new mongoose.Types.UUID(customerId);
     const result = await Order.aggregate([
-      { $match: { customerId: customerUUID, status: 'completed' } },
+      { $match: { customerId: customerUUID, status: {
+        $in: ['completed'] }
+       } },
       {
         $group: {
           _id: '$customerId',
@@ -24,6 +26,7 @@ exports.getCustomerSpending = async (customerId) => {
         },
       },
     ]);
+    
 
     if (!result.length) return null;
 
@@ -43,9 +46,9 @@ exports.getCustomerSpending = async (customerId) => {
   }
 };
 
-exports.getTopSellingProducts = async (limit) => {
+exports.getTopSellingProducts = async ({limit}) => {
   try {
-    const cacheKey = `top-selling-products-${limit?.limit || 5}`;
+    const cacheKey = `top-selling-products-${limit || 5}`;
     const cachedData = await redisClient.get(cacheKey);
 
     if (cachedData) {
@@ -82,7 +85,7 @@ exports.getTopSellingProducts = async (limit) => {
     const sorted = Array.from(productMap.entries())
       .map(([productId, totalSold]) => ({ productId, totalSold }))
       .sort((a, b) => b.totalSold - a.totalSold)
-      .slice(0, limit?.limit || 10);
+      .slice(0, limit || 10);
 
     const productDetails = await Product.find({
       _id: { $in: sorted.map(p => new mongoose.Types.UUID(p.productId)) }

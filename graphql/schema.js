@@ -35,14 +35,20 @@ module.exports = buildSchema(`
         productId: ID!
         quantity: Int!
         priceAtPurchase: Float!
-    }    
+    }
+        
+    enum OrderStatus {
+        pending
+        completed
+        canceled
+    }
 
     type Order {
         _id: ID!
         customerId: ID!
         products: [ProductOrder]
         totalAmount: Float!
-        status: String!
+        status: OrderStatus!
         orderDate: String!
     }
 

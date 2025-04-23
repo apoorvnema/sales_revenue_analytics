@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const OrderSchema = new mongoose.Schema({
     _id: {
         type: mongoose.Schema.Types.UUID,
-        default: () => uuidv4() // Generates a UUID for _id
+        default: () => uuidv4()
     },
     customerId: mongoose.Schema.Types.UUID,
     products: String,
